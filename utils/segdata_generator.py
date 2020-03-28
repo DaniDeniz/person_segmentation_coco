@@ -76,8 +76,8 @@ def preprocess(image, height, width):
         img = cv2.resize(image, (width, new_height))
         im[diff:diff + new_height, :, :] = img
 
-    im = cv2.normalize(im, None, -1, 1, cv2.NORM_MINMAX)
-    return im
+    im_norm = cv2.normalize(im, None, -1, 1, cv2.NORM_MINMAX)
+    return im_norm, im
 
 
 def preprocess_with_label(image, label, height, width, n_classes):
