@@ -57,6 +57,60 @@ class DataGenerator(keras.utils.Sequence):
                          self.input_width)
         return np.array(x), np.array(y)
 
+
+def preprocess(image, height, width):
+    im = np.zeros((height, width, 3), dtype='uint8')
+    im[:, :, :] = 128
+
+    if image.shape[0] >= image.shape[1]:
+        scale = image.shape[0] / height
+        new_width = int(image.shape[1] / scale)
+        diff = (width - new_width) // 2
+        img = cv2.resize(image, (new_width, height))
+
+        im[:, diff:diff + new_width, :] = img
+    else:
+        scale = image.shape[1] / width
+        new_height = int(image.shape[0] / scale)
+        diff = (height - new_height) // 2
+        img = cv2.resize(image, (width, new_height))
+        im[diff:diff + new_height, :, :] = img
+
+    im = cv2.normalize(im, None, -1, 1, cv2.NORM_MINMAX)
+    return im
+
+
+def preprocess_with_label(image, label, height, width, n_classes):
+    im = np.zeros((height, width, 3), dtype='uint8')
+    im[:, :, :] = 128
+    lim = np.zeros((height, width, 3), dtype='uint8')
+
+    if image.shape[0] >= image.shape[1]:
+        scale = image.shape[0] / height
+        new_width = int(image.shape[1] / scale)
+        diff = (width - new_width) // 2
+        img = cv2.resize(image, (new_width, height))
+        label_img = cv2.resize(label, (new_width, height))
+
+        im[:, diff:diff + new_width, :] = img
+        lim[:, diff:diff + new_width, :] = label_img
+    else:
+        scale = image.shape[1] / width
+        new_height = int(image.shape[0] / scale)
+        diff = (height - new_height) // 2
+        img = cv2.resize(image, (width, new_height))
+        label_img = cv2.resize(label, (width, new_height))
+        im[diff:diff + new_height, :, :] = img
+        lim[diff:diff + new_height, :, :] = label_img
+    lim = lim[:, :, 0]
+    seg_labels = np.zeros((height, width, n_classes))
+    for c in range(n_classes):
+        seg_labels[:, :, c] = (lim == c).astype(int)
+    # im = np.float32(im) / 127.5 - 1
+    im = cv2.normalize(im, None, -1, 1, cv2.NORM_MINMAX)
+    seg_labels = np.reshape(seg_labels, (width * height, n_classes))
+    return im, seg_labels
+
 def get_batch(items, root_path, nClasses, height, width):
     x = []
     y = []
@@ -65,34 +119,7 @@ def get_batch(items, root_path, nClasses, height, width):
         label_path = root_path + item.split(' ')[-1].strip()
         img = cv2.imread(image_path, 1)
         label_img = cv2.imread(label_path, 1)
-        im = np.zeros((height, width, 3), dtype='uint8')
-        im[:, :, :] = 128
-        lim = np.zeros((height, width, 3), dtype='uint8')
-
-        if img.shape[0] >= img.shape[1]:
-            scale = img.shape[0] / height
-            new_width = int(img.shape[1] / scale)
-            diff = (width - new_width) // 2
-            img = cv2.resize(img, (new_width, height))
-            label_img = cv2.resize(label_img, (new_width, height))
-
-            im[:, diff:diff + new_width, :] = img
-            lim[:, diff:diff + new_width, :] = label_img
-        else:
-            scale = img.shape[1] / width
-            new_height = int(img.shape[0] / scale)
-            diff = (height - new_height) // 2
-            img = cv2.resize(img, (width, new_height))
-            label_img = cv2.resize(label_img, (width, new_height))
-            im[diff:diff + new_height, :, :] = img
-            lim[diff:diff + new_height, :, :] = label_img
-        lim = lim[:, :, 0]
-        seg_labels = np.zeros((height, width, nClasses))
-        for c in range(nClasses):
-            seg_labels[:, :, c] = (lim == c).astype(int)
-        #im = np.float32(im) / 127.5 - 1
-        im = cv2.normalize(im, None, -1, 1, cv2.NORM_MINMAX)
-        seg_labels = np.reshape(seg_labels, (width * height, nClasses))
+        im, seg_labels = preprocess_with_label(img, label_img, height, width, nClasses)
         x.append(im)
         y.append(seg_labels)
     return x, y
