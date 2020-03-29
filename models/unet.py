@@ -32,7 +32,6 @@ def Unet(nClasses, input_height=256, input_width=256, nChannels=3):
     conv5 = Conv2D(1024, (3, 3), padding='same', activation="relu",kernel_initializer=orthogonal())(pool4)
     conv5 = Dropout(0.2)(conv5)
     conv5 = Conv2D(1024, (3, 3), padding='same',activation="relu", kernel_initializer=orthogonal())(conv5)
-    pool5 = MaxPooling2D(pool_size=(2, 2))(conv5)
     # 8x8
 
     # decode
