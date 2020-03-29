@@ -105,6 +105,7 @@ def preprocess_with_label(image, label, height, width, n_classes):
     lim = lim[:, :, 0]
     if n_classes == 2:
         seg_labels = lim
+        seg_labels = np.reshape((seg_labels.shape[0], seg_labels.shape[1], 1))
     else:
         seg_labels = np.zeros((height, width, n_classes))
         for c in range(n_classes):
