@@ -105,7 +105,7 @@ def Unet(nClasses, input_height=256, input_width=256, nChannels=3):
         #conv11= Activation("sigmoid")(conv11)
     else:
         conv11 = Conv2D(nClasses, (1, 1), padding='same', activation='relu',
-                        kernel_initializer=he_normal(), kernel_regularizer=l2(0.005))(conv10)
+                        kernel_initializer=he_normal())(conv10)
 
         conv11 = (Reshape((input_height * input_width, -1)))(conv11)
         conv11 = (Activation('softmax'))(conv11)
