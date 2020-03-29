@@ -99,10 +99,10 @@ def Unet(nClasses, input_height=256, input_width=256, nChannels=3):
 
 
     if nClasses == 2:
-        conv11 = Conv2D(1, (1, 1), padding='same',activation="relu",
+        conv11 = Conv2D(1, (1, 1), padding='same',activation="sigmoid",
                         kernel_initializer=he_normal(), kernel_regularizer=l2(0.005))(conv10)
 
-        conv11= Activation("sigmoid")(conv11)
+        #conv11= Activation("sigmoid")(conv11)
     else:
         conv11 = Conv2D(nClasses, (1, 1), padding='same', activation='relu',
                         kernel_initializer=he_normal(), kernel_regularizer=l2(0.005))(conv10)
