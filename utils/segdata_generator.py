@@ -103,14 +103,10 @@ def preprocess_with_label(image, label, height, width, n_classes):
         im[diff:diff + new_height, :, :] = img
         lim[diff:diff + new_height, :, :] = label_img
     lim = lim[:, :, 0]
-    if n_classes == 2:
-        seg_labels = lim
-        seg_labels = np.reshape(seg_labels, (seg_labels.shape[0], seg_labels.shape[1], 1))
-    else:
-        seg_labels = np.zeros((height, width, n_classes))
-        for c in range(n_classes):
-            seg_labels[:, :, c] = (lim == c).astype(int)
-        seg_labels = np.reshape(seg_labels, (width * height, n_classes))
+    seg_labels = np.zeros((height, width, n_classes))
+    for c in range(n_classes):
+        seg_labels[:, :, c] = (lim == c).astype(int)
+    seg_labels = np.reshape(seg_labels, (width * height, n_classes))
 
     im = cv2.normalize(im, None, -1, 1, cv2.NORM_MINMAX)
     return im, seg_labels
