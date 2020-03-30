@@ -58,7 +58,7 @@ class DataGenerator(keras.utils.Sequence):
         return np.array(x), np.array(y)
 
 
-def preprocess(image, height, width):
+def preprocess(image, height=224, width=224):
     #image = brightness_fix(image)
     im = np.zeros((height, width, 3), dtype='uint8')
     im[:, :, :] = 128
@@ -77,7 +77,7 @@ def preprocess(image, height, width):
         img = cv2.resize(image, (width, new_height))
         im[diff:diff + new_height, :, :] = img
 
-    im_norm = scale(im)
+    im_norm = scale_frame(im)
     return im_norm, im
 
 
@@ -124,7 +124,7 @@ def preprocess_with_label(image, label, height, width, n_classes):
         seg_labels[:, :, c] = (lim == c).astype(int)
     seg_labels = np.reshape(seg_labels, (width * height, n_classes))
 
-    im = scale(im)
+    im = scale_frame(im)
     return im, seg_labels
 
 def get_batch(items, root_path, nClasses, height, width):
@@ -140,7 +140,8 @@ def get_batch(items, root_path, nClasses, height, width):
         y.append(seg_labels)
     return x, y
 
-def scale(x):
+def scale_frame(x):
+    x = x.astype(np.float32)
     x /= 127.5
     x -= 1.
     return x
