@@ -59,16 +59,12 @@ def Unet(nClasses, input_height=256, input_width=256, nChannels=3):
     conv9 = SpatialDropout2D(0.2)(conv9)
     conv9 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer=orthogonal())(conv9)
 
-    conv10 = Conv2D(nClasses, (1, 1), padding='same', activation='relu',
-                    kernel_initializer=he_normal(), kernel_regularizer=l2(0.005))(conv9)
+    final_activation = "sigmoid"
+    if nClasses > 1:
+        final_activation = "softmax"
+    conv10 = Conv2D(nClasses, (1, 1), activation=final_activation)(conv9)
 
-    if nClasses == 2:
-        conv11 = Activation("sigmoid")
-    else:
-        conv11 = (Reshape((input_height * input_width, -1)))(conv10)
-        conv11 = (Activation('softmax'))(conv11)
-
-    model = Model(input=inputs, output=conv11)
+    model = Model(input=inputs, output=conv10)
 
     return model
 
