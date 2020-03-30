@@ -169,12 +169,11 @@ def Unet_mini_bn(nClasses, input_height=256, input_width=256, nChannels=3):
     conv9 = SpatialDropout2D(0.2)(conv9)
     conv9 = conv2d_bn(conv9, 64, (3, 3), padding='same')
 
-    conv10 = Conv2D(nClasses, (1, 1), padding='same', activation='relu',
-                    kernel_initializer=he_normal(), kernel_regularizer=l2(0.005))(conv9)
+    final_activation = "sigmoid"
+    if nClasses > 1:
+        final_activation = "softmax"
+    conv10 = Conv2D(nClasses, (1, 1), activation=final_activation)(conv9)
 
-    conv11 = (Reshape((input_height * input_width, -1)))(conv10)
-    conv11 = (Activation('softmax'))(conv11)
-
-    model = Model(input=inputs, output=conv11)
+    model = Model(input=inputs, output=conv10)
 
     return model
