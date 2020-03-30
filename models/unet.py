@@ -114,6 +114,66 @@ def Unet_mini(nClasses, input_height=256, input_width=256, nChannels=3):
     conv10 = Conv2D(nClasses, (1, 1), padding='same', activation='relu',
                     kernel_initializer=he_normal(), kernel_regularizer=l2(0.005))(conv9)
 
+    conv11 = Reshape((input_height * input_width, -1))(conv10)
+    conv11 = Activation('softmax')(conv11)
+
+    model = Model(input=inputs, output=conv11)
+
+    return model
+
+
+def conv2d_bn(input_kernel, filters, kernel, padding):
+    x = Conv2D(filters, kernel, padding=padding, kernel_initializer="he_normal", use_bias=False)(input_kernel)
+    x = BatchNormalization(scale=False)(x)
+    x = Activation(activation="relu")(x)
+    return x
+
+
+
+def Unet_mini_bn(nClasses, input_height=256, input_width=256, nChannels=3):
+    inputs = Input(shape=(input_height, input_width, nChannels))
+    # encode
+    # 224x224
+    conv1 = conv2d_bn(inputs, 64, (3, 3), padding='same')
+    conv1 = Dropout(0.2)(conv1)
+    conv1 = conv2d_bn(conv1, 64, (3, 3), padding='same')
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+    # 112x112
+    conv2 = conv2d_bn(pool1, 128, (3, 3), padding='same')
+    conv2 = Dropout(0.2)(conv2)
+    conv2 = conv2d_bn(conv2, 128, (3, 3), padding='same')
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+    # 56x56
+    conv3 = conv2d_bn(pool2, 256, (3, 3), padding='same')
+    conv3 = Dropout(0.2)(conv3)
+    conv3 = conv2d_bn(conv3, 256, (3, 3), padding='same')
+    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+    # 28x28
+    conv4 = conv2d_bn(pool3, 512, (3, 3), padding='same')
+    conv4 = Dropout(0.2)(conv4)
+    conv4 = conv2d_bn(conv4, 512, (3, 3), padding='same')
+
+    up7 = UpSampling2D(size=(2, 2))(conv4)
+    up7 = concatenate([up7, conv3], axis=-1)
+    conv7 = conv2d_bn(up7, 256, (3, 3), padding='same')
+    conv7 = Dropout(0.2)(conv7)
+    conv7 = conv2d_bn(conv7, 256, (3, 3), padding='same')
+
+    up8 = UpSampling2D(size=(2, 2))(conv7)
+    up8 = concatenate([up8, conv2], axis=-1)
+    conv8 = conv2d_bn(up8, 128, (3, 3), padding='same')
+    conv8 = Dropout(0.2)(conv8)
+    conv8 = conv2d_bn(conv8, 128, (3, 3), padding='same')
+
+    up9 = UpSampling2D(size=(2, 2))(conv8)
+    up9 = concatenate([up9, conv1], axis=-1)
+    conv9 = conv2d_bn(up9, 64, (3, 3), padding='same')
+    conv9 = Dropout(0.2)(conv9)
+    conv9 = conv2d_bn(conv9, 64, (3, 3), padding='same')
+
+    conv10 = Conv2D(nClasses, (1, 1), padding='same', activation='relu',
+                    kernel_initializer=he_normal(), kernel_regularizer=l2(0.005))(conv9)
+
     conv11 = (Reshape((input_height * input_width, -1)))(conv10)
     conv11 = (Activation('softmax'))(conv11)
 
