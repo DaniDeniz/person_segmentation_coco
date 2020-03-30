@@ -121,8 +121,11 @@ def preprocess_with_label(image, label, height, width, n_classes):
         lim[diff:diff + new_height, :] = label_img
     lim = lim[:, :]
     seg_labels = np.zeros((height, width, n_classes))
-    for c in range(n_classes):
-        seg_labels[:, :, c] = (lim == (c+1)).astype(int)
+    if n_classes == 1:
+        seg_labels[:, :, 0] = (lim == 1).astype(int)
+    else:
+        for c in range(n_classes):
+            seg_labels[:, :, c] = (lim == c).astype(int)
     # seg_labels = np.reshape(seg_labels, (width * height, n_classes))
     im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     im = scale_frame(im)
