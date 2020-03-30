@@ -100,7 +100,7 @@ def preprocess_with_label(image, label, height, width, n_classes):
     #image = brightness_fix(image)
     im = np.zeros((height, width, 3), dtype='uint8')
     im[:, :, :] = 128
-    lim = np.zeros((height, width, 3), dtype='uint8')
+    lim = np.zeros((height, width), dtype='uint8')
 
     if image.shape[0] >= image.shape[1]:
         scale = image.shape[0] / height
@@ -110,7 +110,7 @@ def preprocess_with_label(image, label, height, width, n_classes):
         label_img = cv2.resize(label, (new_width, height))
 
         im[:, diff:diff + new_width, :] = img
-        lim[:, diff:diff + new_width, :] = label_img
+        lim[:, diff:diff + new_width] = label_img
     else:
         scale = image.shape[1] / width
         new_height = int(image.shape[0] / scale)
@@ -118,11 +118,11 @@ def preprocess_with_label(image, label, height, width, n_classes):
         img = cv2.resize(image, (width, new_height))
         label_img = cv2.resize(label, (width, new_height))
         im[diff:diff + new_height, :, :] = img
-        lim[diff:diff + new_height, :, :] = label_img
-    lim = lim[:, :, 0]
+        lim[diff:diff + new_height, :] = label_img
+    lim = lim[:, :]
     seg_labels = np.zeros((height, width, n_classes))
     for c in range(n_classes):
-        seg_labels[:, :, c] = (lim == c).astype(int)
+        seg_labels[:, :, c] = (lim == (c+1)).astype(int)
     # seg_labels = np.reshape(seg_labels, (width * height, n_classes))
     im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     im = scale_frame(im)
@@ -135,7 +135,7 @@ def get_batch(items, root_path, nClasses, height, width):
         image_path = root_path + item.split(' ')[0]
         label_path = root_path + item.split(' ')[-1].strip()
         img = cv2.imread(image_path, 1)
-        label_img = cv2.imread(label_path, 1)
+        label_img = cv2.imread(label_path, 0)
         im, seg_labels = preprocess_with_label(img, label_img, height, width, nClasses)
         x.append(im)
         y.append(seg_labels)
