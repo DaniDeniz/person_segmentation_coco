@@ -59,6 +59,7 @@ class DataGenerator(keras.utils.Sequence):
 
 
 def preprocess(image, height, width):
+    image = brightness_fix(image)
     im = np.zeros((height, width, 3), dtype='uint8')
     im[:, :, :] = 128
 
@@ -80,7 +81,22 @@ def preprocess(image, height, width):
     return im_norm, im
 
 
+def brightness_fix(img):
+    img_blur = cv2.GaussianBlur(img, (5, 5), 0)
+    img_RGB = cv2.cvtColor(img_blur, cv2.COLOR_BGR2RGB)
+    img_YCrCb = cv2.cvtColor(img_RGB, cv2.COLOR_RGB2YCrCb)
+
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    cl1 = clahe.apply(img_YCrCb[:, :, 0])
+
+    img_YCrCb[:, :, 0] = cl1
+
+    img_RGB_2 = cv2.cvtColor(img_YCrCb, cv2.COLOR_YCrCb2RGB)
+
+    return img_RGB_2
+
 def preprocess_with_label(image, label, height, width, n_classes):
+    image = brightness_fix(image)
     im = np.zeros((height, width, 3), dtype='uint8')
     im[:, :, :] = 128
     lim = np.zeros((height, width, 3), dtype='uint8')
