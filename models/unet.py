@@ -60,7 +60,7 @@ def Unet(nClasses, input_height=256, input_width=256, nChannels=3):
     conv9 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer=orthogonal())(conv9)
 
     conv10 = Conv2D(nClasses, (1, 1), padding='same', activation='relu',
-                    kernel_initializer=he_normal())(conv9)
+                    kernel_initializer=he_normal(), kernel_regularizer=l2(0.005))(conv9)
 
     conv11 = (Reshape((input_height * input_width, -1)))(conv10)
     conv11 = (Activation('softmax'))(conv11)
