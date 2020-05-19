@@ -54,7 +54,7 @@ class DataGenerator(keras.utils.Sequence):
     def data_generation(self, list_ids_temp):
         x, y = get_batch(list_ids_temp, self.root_path,
                          self.n_classes, self.input_height,
-                         self.input_width)
+                         self.input_width, not self.shuffle)
         return np.array(x), np.array(y)
 
 
@@ -96,7 +96,7 @@ def brightness_fix(img):
 
     return img_RGB_2
 
-def preprocess_with_label(image, label, height, width, n_classes):
+def preprocess_with_label(image, label, height, width, n_classes, test=False):
     #image = brightness_fix(image)
     im = np.zeros((height, width, 3), dtype='uint8')
     im[:, :, :] = 128
@@ -128,10 +128,16 @@ def preprocess_with_label(image, label, height, width, n_classes):
             seg_labels[:, :, c] = (lim == c).astype(int)
     # seg_labels = np.reshape(seg_labels, (width * height, n_classes))
     im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+    if not test:
+        horizontal_flip = random.uniform(0, 1)
+        if horizontal_flip > 0.5:
+            im = np.fliplr(im)
+            seg_labels = np.fliplr(seg_labels)
     im = scale_frame(im)
     return im, seg_labels
 
-def get_batch(items, root_path, nClasses, height, width):
+def get_batch(items, root_path, nClasses, height, width, test=False):
     x = []
     y = []
     for item in items:
@@ -139,7 +145,7 @@ def get_batch(items, root_path, nClasses, height, width):
         label_path = root_path + item.split(' ')[-1].strip()
         img = cv2.imread(image_path, 1)
         label_img = cv2.imread(label_path, 0)
-        im, seg_labels = preprocess_with_label(img, label_img, height, width, nClasses)
+        im, seg_labels = preprocess_with_label(img, label_img, height, width, nClasses, test)
         x.append(im)
         y.append(seg_labels)
     return x, y
